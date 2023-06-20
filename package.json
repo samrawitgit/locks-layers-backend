@@ -1,0 +1,41 @@
+{
+  "name": "locks-layers-backend",
+  "version": "1.0.0",
+  "description": "Node.js server for Locks&Layers applications",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js",
+    "start-server": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samrawitgit/locks-layers-backend.git"
+  },
+  "keywords": [
+    "hairdresser",
+    "beauty",
+    "spa",
+    "hair",
+    "parrucchieri",
+    "capelli",
+    "taglio",
+    "piega"
+  ],
+  "author": "Samrawit Tekie Fassil",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/samrawitgit/locks-layers-backend/issues"
+  },
+  "homepage": "https://github.com/samrawitgit/locks-layers-backend#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongodb": "^5.6.0",
+    "mysql2": "^3.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
