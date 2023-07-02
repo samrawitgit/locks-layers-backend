@@ -30,7 +30,9 @@
   "homepage": "https://github.com/samrawitgit/locks-layers-backend#readme",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
     "express": "^4.18.2",
+    "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.0",
     "mongodb": "^5.6.0",
     "mysql2": "^3.4.0"

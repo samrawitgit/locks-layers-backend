@@ -1,7 +1,8 @@
 const express = require("express");
-
+const bodyParser = require("body-parser");
 const sqlDb = require("./utils/database").sqlDb;
-const mongoConnect = require("./utils/database").mongoConnect;
+// const mongoConnect = require("./utils/database").mongoConnect;
+const initDb = require("./utils/database").initDb;
 
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
@@ -17,25 +18,29 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, PATCH, DELETE"
   );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization"); // allows to set headers
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type",
+    "Authorization"
+  ); // allows to set headers
   next();
 });
 
 app.use("/admin", adminRoutes);
-// app.use("/auth", authRoutes);
+app.use("/auth", authRoutes);
 
 // Route to handle improper paths (catch all route)
-app.use((req, res, next) => {
-  res.status(404).send("<h1>Page not found</h1<");
-});
-
-// app.use((error, req, res, next) => {
-//   console.log(error);
-//   const status = error.statusCode || 500;
-//   const message = error.message;
-//   const data = error.data;
-//   res.status(status).json({ message: message, data: data });
+// app.use((req, res, next) => {
+//   res.status(404).send("<h1>Page not found</h1<");
 // });
+
+app.use((error, req, res, next) => {
+  console.log(error);
+  const status = error.statusCode || 500;
+  const message = error.message;
+  const data = error.data;
+  res.status(status).json({ message: message, data: data });
+});
 
 // sqlDb.execute('SELECT day_of_week FROM days_of_week WHERE day_of_week > 4')
 // 	.then(result => {
@@ -44,8 +49,13 @@ app.use((req, res, next) => {
 // 	})
 // 	.catch(err => console.log(err));
 
-mongoConnect(() => {
-  app.listen(5900);
+initDb((err, db) => {
+  if (err) {
+    console.log(err);
+  } else {
+    console.log("connected");
+    app.listen(8080);
+  }
 });
 
-// app.listen(5900); // in production no need to pass a port
+// app.listen(8080); // in production no need to pass a port
