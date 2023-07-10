@@ -6,6 +6,7 @@ const initDb = require("./utils/database").initDb;
 
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
+const bookingsRoutes = require("./routes/bookings");
 const salonRoutes = require("./routes/salon");
 
 const app = express();
@@ -28,6 +29,7 @@ app.use((req, res, next) => {
 
 app.use("/admin", adminRoutes);
 app.use("/auth", authRoutes);
+app.use("/", bookingsRoutes);
 
 // Route to handle improper paths (catch all route)
 // app.use((req, res, next) => {
@@ -49,12 +51,14 @@ app.use((error, req, res, next) => {
 // 	})
 // 	.catch(err => console.log(err));
 
+// app.listen(8080); //, "192.168.1.121"
+
 initDb((err, db) => {
   if (err) {
     console.log(err);
   } else {
     console.log("connected");
-    app.listen(8080);
+    app.listen(8080); //, "192.168.1.121"
   }
 });
 
