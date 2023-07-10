@@ -38,8 +38,8 @@ const AdminUser = require("../models/user").AdminUser;
 //     });
 // };
 
-const createToken = () => {
-  return jwt.sign({}, "secret", { expiresIn: "1h" });
+const createToken = (extraData = {}) => {
+  return jwt.sign(extraData, "secret", { expiresIn: "1h" });
 };
 
 exports.adminRegistration = (req, res, next) => {
@@ -52,15 +52,15 @@ exports.adminRegistration = (req, res, next) => {
       // Store hashedPW in database
       getDb()
         .db()
-        .collection("users") // TODO: change to admin users
+        .collection("admins") // TODO: change to admin users
         .insertOne({
-          username: userName,
+          userName: userName,
           password: hashedPW,
         })
         .then((result) => {
           console.log(result);
           const token = createToken();
-          res.status(201).json({ token: token, user: { username: userName } });
+          res.status(201).json({ token: token, user: { userName: userName } });
         })
         .catch((err) => {
           console.log(err);
@@ -79,7 +79,7 @@ exports.adminLogin = (req, res, next) => {
   let loadedUser;
   getDb()
     .db()
-    .collection("users") // TODO: change to admin users
+    .collection("admins")
     .findOne({ userName: userName })
     .then((userDoc) => {
       console.log({ userDoc });
@@ -118,31 +118,44 @@ exports.adminLogin = (req, res, next) => {
 exports.userRegistration = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
+  const name = req.body.name;
 
-  bcrypt
-    .hash(password, 12)
-    .then((hashedPW) => {
-      // Store hashedPW in database
-      getDb()
-        .db()
-        .collection("users")
-        .insertOne({
-          userName: email,
-          password: hashedPW,
-        })
-        .then((result) => {
-          console.log(result);
-          const token = createToken();
-          res.status(201).json({ token: token, user: { email: email } }); // TODO: change to email
-        })
-        .catch((err) => {
-          console.log(err);
-          res.status(500).json({ message: "Creating the user failed." });
+  getDb()
+    .db()
+    .collection("users")
+    .findOne({ userName: email }) // TODO: change to email
+    .then((user) => {
+      if (user) {
+        return res.status(409).json({
+          message: "Email exists",
         });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({ message: "Creating the user failed." });
+      } else {
+        bcrypt
+          .hash(password, 12)
+          .then((hashedPW) => {
+            // Store hashedPW in database
+            getDb()
+              .db()
+              .collection("users")
+              .insertOne({
+                userName: email,
+                password: hashedPW,
+                name: name,
+              })
+              .then((result) => {
+                console.log(result);
+                res.status(201).json({ user: { email: email, name: name } }); // TODO: change to email
+              })
+              .catch((err) => {
+                console.log(err);
+                res.status(500).json({ message: "Creating the user failed." });
+              });
+          })
+          .catch((err) => {
+            console.log(err);
+            res.status(500).json({ message: "Creating the user failed." });
+          });
+      }
     });
 };
 
@@ -171,7 +184,10 @@ exports.userLogin = (req, res, next) => {
       if (!isEqual) {
         throw Error();
       }
-      const token = createToken();
+      const token = createToken({
+        email: email,
+        userId: loadedUser._id.toString(),
+      });
       res.status(200).json({
         message: "Authentication succeeded.",
         token: token,
