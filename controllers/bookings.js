@@ -1,6 +1,8 @@
+const dayjs = require("dayjs");
+const { ObjectId } = require("mongodb");
+
 const sqlDb = require("../utils/database").sqlDb;
 const getDb = require("../utils/database").getDb;
-const { ObjectId } = require("mongodb");
 
 exports.getBookingsByLoc = (req, res, next) => {
   const locationId = req.params.locationId;
@@ -119,30 +121,85 @@ exports.getBookingsGroupedByMonth = (req, res, next) => {
     });
 };
 
-// exports.getServiceById = (req, res, next) => {
-//   const type = req.params.type;
-//   sqlDb
-//     .execute(`SELECT * FROM services WHERE service_type=?`, [type])
-//     .then((data) => {
-//       console.log({ "service type": data });
-//       return res.status(200).json({ type: data });
-//     });
-// };
+exports.getServiceById = (type) => {
+  // const type = req.params.type;
+  sqlDb
+    .execute(`SELECT * FROM services WHERE service_type=?`, [type])
+    .then((data) => {
+      console.log({ "service type": data });
+      return { typeId: data[0][0].id };
+    });
+};
 
-// exports.addBooking = (req, res, next) => {
-//   const userId = req.body.userId;
-//   const service = req.body.service;
-//   const location = req.body.location;
-//   let serviceId;
-//   let locationId;
-//   sqlDb
-//     .execute(`SELECT * FROM services WHERE service_type=?`, [service])
-//     .then((data) => {
-//       console.log({ "service type": data });
-//       // return res.status(200).json({ type: data });
-//       serviceId = data.id;
-//     });
-//   console.log({ serviceId });
-//   // const staff = req.body.staff; TODO: assign randomly
-//   const date = new Date();
-// };
+const getRandomStaffMember = (locationId, start, end) => {
+  let staffOff;
+  //TODO: check staffmemeber aren't already busy at that time from bookings
+  return sqlDb.execute(
+    `SELECT s.*,  l.city, l.tot_work_stations FROM staff AS s
+      LEFT JOIN (SELECT * FROM alt_staff_hours AS alt
+        WHERE alt.start_date <= ? && alt.end_date >= ?) AS alt ON s.id = alt.id_staff
+      INNER JOIN locations AS l ON l.id = s.id_location
+      WHERE alt.id_staff IS NULL && s.id_location = ?
+    ;`,
+    [start, end, locationId]
+  );
+};
+
+exports.addBooking = async (req, res, next) => {
+  const userId = req.body.userId;
+  const service = req.body.service;
+  const location = req.body.location;
+  const startBooking = dayjs(req.body.date);
+  let serviceId;
+  let locationId;
+  const serviceRes = await sqlDb.execute(
+    `SELECT * FROM services WHERE service_type=?`,
+    [service]
+  );
+  const locationRes = await sqlDb.execute(
+    `SELECT * FROM locations WHERE city=?`,
+    [location]
+  );
+  if (serviceRes && locationRes) {
+    serviceId = serviceRes[0][0].id;
+    locationId = locationRes[0][0].id;
+
+    const duration = serviceRes[0][0].duration;
+    const durationObj = {
+      h: duration.slice(0, 2),
+      m: duration.slice(3, 5),
+      s: duration.slice(6, 8),
+    };
+    const endBooking = startBooking
+      .add(durationObj.h, "hour")
+      .add(durationObj.m, "minute");
+
+    const allStaff = await getRandomStaffMember(
+      locationId,
+      startBooking.format("YYYY-MM-DD HH:mm:ss"),
+      endBooking.format("YYYY-MM-DD HH:mm:ss")
+    );
+    if (allStaff) {
+      const availableStaff = allStaff[0];
+      const chosen =
+        availableStaff[Math.floor(Math.random() * availableStaff.length)];
+      const newBooking = await sqlDb.execute(
+        `INSERT INTO bookings (bookings.id_user, bookings.id_service, bookings.id_location, bookings.id_staff, bookings.booking_date) 
+        VALUES (?, ?, ?, ?, ?)`,
+        [
+          userId,
+          serviceId,
+          locationId,
+          chosen.id,
+          startBooking.format("YYYY-MM-DD HH:mm:ss"),
+        ]
+      );
+      if (newBooking) {
+        console.log({ newBooking });
+        res.status(201).json({ message: "Booking was successful" });
+      }
+    }
+  } else {
+    res.status(500).json({ message: "Failed to add booking." });
+  }
+};

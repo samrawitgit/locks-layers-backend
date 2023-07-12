@@ -12,6 +12,6 @@ router.get(
 );
 router.get("/user-bookings/:userId", bookingsController.getBookingsByUser);
 
-// router.post("/new-booking", bookingsController.addBooking);
+router.post("/new-booking", bookingsController.addBooking);
 
 module.exports = router;
