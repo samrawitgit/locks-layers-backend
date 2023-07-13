@@ -131,8 +131,13 @@ exports.getServiceById = (type) => {
     });
 };
 
-const getRandomStaffMember = (locationId, start, end) => {
-  let staffOff;
+const getRandomStaffMember = (start, duration, locationId) => {
+  const durationObj = {
+    h: duration.slice(0, 2),
+    m: duration.slice(3, 5),
+    s: duration.slice(6, 8),
+  };
+  const end = start.add(durationObj.h, "hour").add(durationObj.m, "minute");
   //TODO: check staffmemeber aren't already busy at that time from bookings
   return sqlDb.execute(
     `SELECT s.*,  l.city, l.tot_work_stations FROM staff AS s
@@ -141,7 +146,11 @@ const getRandomStaffMember = (locationId, start, end) => {
       INNER JOIN locations AS l ON l.id = s.id_location
       WHERE alt.id_staff IS NULL && s.id_location = ?
     ;`,
-    [start, end, locationId]
+    [
+      start.format("YYYY-MM-DD HH:mm:ss"),
+      end.format("YYYY-MM-DD HH:mm:ss"),
+      locationId,
+    ]
   );
 };
 
@@ -150,8 +159,7 @@ exports.addBooking = async (req, res, next) => {
   const service = req.body.service;
   const location = req.body.location;
   const startBooking = dayjs(req.body.date);
-  let serviceId;
-  let locationId;
+
   const serviceRes = await sqlDb.execute(
     `SELECT * FROM services WHERE service_type=?`,
     [service]
@@ -160,29 +168,24 @@ exports.addBooking = async (req, res, next) => {
     `SELECT * FROM locations WHERE city=?`,
     [location]
   );
-  if (serviceRes && locationRes) {
-    serviceId = serviceRes[0][0].id;
-    locationId = locationRes[0][0].id;
 
+  if (serviceRes && locationRes) {
+    const serviceId = serviceRes[0][0].id;
+    const locationId = locationRes[0][0].id;
     const duration = serviceRes[0][0].duration;
-    const durationObj = {
-      h: duration.slice(0, 2),
-      m: duration.slice(3, 5),
-      s: duration.slice(6, 8),
-    };
-    const endBooking = startBooking
-      .add(durationObj.h, "hour")
-      .add(durationObj.m, "minute");
 
     const allStaff = await getRandomStaffMember(
-      locationId,
-      startBooking.format("YYYY-MM-DD HH:mm:ss"),
-      endBooking.format("YYYY-MM-DD HH:mm:ss")
+      startBooking,
+      duration,
+      locationId
     );
+
     if (allStaff) {
       const availableStaff = allStaff[0];
+
       const chosen =
-        availableStaff[Math.floor(Math.random() * availableStaff.length)];
+        availableStaff[Math.floor(Math.random() * availableStaff.length)]; //TODO: check why always getting num = 7
+
       const newBooking = await sqlDb.execute(
         `INSERT INTO bookings (bookings.id_user, bookings.id_service, bookings.id_location, bookings.id_staff, bookings.booking_date) 
         VALUES (?, ?, ?, ?, ?)`,
