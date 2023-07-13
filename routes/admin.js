@@ -23,6 +23,10 @@ router.get("/locations/:locationId", locationController.getLocation);
 
 router.get("/business_hours/:locationId", locationController.getBusinessHours);
 
+router.post("/close-location", locationController.closeLocation);
+
+router.post("/time-off", staffController.addTimeOff);
+
 // router.post('add-product', ...) // admin/add-product => POST
 
 module.exports = router;

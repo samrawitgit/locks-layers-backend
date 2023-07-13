@@ -3,6 +3,8 @@ const { ObjectId } = require("mongodb");
 
 const sqlDb = require("../utils/database").sqlDb;
 const getDb = require("../utils/database").getDb;
+const { getLocationIdByCity } = require("./location");
+const { getRandomStaffMember } = require("./staff");
 
 exports.getBookingsByLoc = (req, res, next) => {
   const locationId = req.params.locationId;
@@ -124,41 +126,6 @@ exports.getBookingsGroupedByMonth = (req, res, next) => {
 exports.getServiceByType = (type) =>
   sqlDb.execute(`SELECT * FROM services WHERE service_type=?`, [type]);
 
-exports.getlocationIdByCity = (city) =>
-  sqlDb.execute(`SELECT * FROM locations WHERE city=?`, [city]);
-
-const getRandomStaffMember = (start, duration, locationId) => {
-  const durationObj = {
-    h: duration.slice(0, 2),
-    m: duration.slice(3, 5),
-    s: duration.slice(6, 8),
-  };
-  const end = start
-    .add(durationObj.h, "hour")
-    .add(durationObj.m, "minute")
-    .format("YYYY-MM-DD HH:mm:ss");
-
-  return sqlDb.execute(
-    `
-    SELECT s.*,  l.city, l.tot_work_stations FROM staff AS s
-      LEFT JOIN (SELECT * FROM alt_staff_hours AS alt
-            WHERE alt.start_date BETWEEN ? AND ?) AS alt ON s.id = alt.id_staff
-      LEFT JOIN (SELECT * FROM bookings AS b 
-        WHERE b.booking_date BETWEEN ? AND ?) AS b ON s.id = b.id_staff
-      INNER JOIN locations AS l ON l.id = s.id_location
-        WHERE alt.id_staff IS NULL 
-        && b.id_staff IS NULL
-            && s.id_location = ?;`,
-    [
-      start.format("YYYY-MM-DD HH:mm:ss"),
-      end,
-      start.format("YYYY-MM-DD HH:mm:ss"),
-      end,
-      locationId,
-    ]
-  );
-};
-
 exports.addBooking = async (req, res, next) => {
   const userId = req.body.userId;
   const service = req.body.service;
@@ -166,7 +133,7 @@ exports.addBooking = async (req, res, next) => {
   const startBooking = dayjs(req.body.date);
 
   const serviceRes = await this.getServiceByType(service);
-  const locationRes = await this.getlocationIdByCity(location);
+  const locationRes = await getLocationIdByCity(location);
 
   if (serviceRes && locationRes) {
     const serviceId = serviceRes[0][0].id;
