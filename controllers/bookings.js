@@ -121,15 +121,11 @@ exports.getBookingsGroupedByMonth = (req, res, next) => {
     });
 };
 
-exports.getServiceById = (type) => {
-  // const type = req.params.type;
-  sqlDb
-    .execute(`SELECT * FROM services WHERE service_type=?`, [type])
-    .then((data) => {
-      console.log({ "service type": data });
-      return { typeId: data[0][0].id };
-    });
-};
+exports.getServiceByType = (type) =>
+  sqlDb.execute(`SELECT * FROM services WHERE service_type=?`, [type]);
+
+exports.getlocationIdByCity = (city) =>
+  sqlDb.execute(`SELECT * FROM locations WHERE city=?`, [city]);
 
 const getRandomStaffMember = (start, duration, locationId) => {
   const durationObj = {
@@ -137,18 +133,27 @@ const getRandomStaffMember = (start, duration, locationId) => {
     m: duration.slice(3, 5),
     s: duration.slice(6, 8),
   };
-  const end = start.add(durationObj.h, "hour").add(durationObj.m, "minute");
-  //TODO: check staffmemeber aren't already busy at that time from bookings
+  const end = start
+    .add(durationObj.h, "hour")
+    .add(durationObj.m, "minute")
+    .format("YYYY-MM-DD HH:mm:ss");
+
   return sqlDb.execute(
-    `SELECT s.*,  l.city, l.tot_work_stations FROM staff AS s
+    `
+    SELECT s.*,  l.city, l.tot_work_stations FROM staff AS s
       LEFT JOIN (SELECT * FROM alt_staff_hours AS alt
-        WHERE alt.start_date <= ? && alt.end_date >= ?) AS alt ON s.id = alt.id_staff
+            WHERE alt.start_date BETWEEN ? AND ?) AS alt ON s.id = alt.id_staff
+      LEFT JOIN (SELECT * FROM bookings AS b 
+        WHERE b.booking_date BETWEEN ? AND ?) AS b ON s.id = b.id_staff
       INNER JOIN locations AS l ON l.id = s.id_location
-      WHERE alt.id_staff IS NULL && s.id_location = ?
-    ;`,
+        WHERE alt.id_staff IS NULL 
+        && b.id_staff IS NULL
+            && s.id_location = ?;`,
     [
       start.format("YYYY-MM-DD HH:mm:ss"),
-      end.format("YYYY-MM-DD HH:mm:ss"),
+      end,
+      start.format("YYYY-MM-DD HH:mm:ss"),
+      end,
       locationId,
     ]
   );
@@ -160,46 +165,43 @@ exports.addBooking = async (req, res, next) => {
   const location = req.body.location;
   const startBooking = dayjs(req.body.date);
 
-  const serviceRes = await sqlDb.execute(
-    `SELECT * FROM services WHERE service_type=?`,
-    [service]
-  );
-  const locationRes = await sqlDb.execute(
-    `SELECT * FROM locations WHERE city=?`,
-    [location]
-  );
+  const serviceRes = await this.getServiceByType(service);
+  const locationRes = await this.getlocationIdByCity(location);
 
   if (serviceRes && locationRes) {
     const serviceId = serviceRes[0][0].id;
-    const locationId = locationRes[0][0].id;
     const duration = serviceRes[0][0].duration;
+    const locationId = locationRes[0][0].id;
 
     const allStaff = await getRandomStaffMember(
       startBooking,
       duration,
       locationId
     );
-
     if (allStaff) {
       const availableStaff = allStaff[0];
-
-      const chosen =
-        availableStaff[Math.floor(Math.random() * availableStaff.length)]; //TODO: check why always getting num = 7
-
-      const newBooking = await sqlDb.execute(
-        `INSERT INTO bookings (bookings.id_user, bookings.id_service, bookings.id_location, bookings.id_staff, bookings.booking_date) 
-        VALUES (?, ?, ?, ?, ?)`,
-        [
-          userId,
-          serviceId,
-          locationId,
-          chosen.id,
-          startBooking.format("YYYY-MM-DD HH:mm:ss"),
-        ]
-      );
-      if (newBooking) {
-        console.log({ newBooking });
-        res.status(201).json({ message: "Booking was successful" });
+      if (availableStaff.length) {
+        const chosen =
+          availableStaff[Math.floor(Math.random() * availableStaff.length)];
+        const newBooking = await sqlDb.execute(
+          `INSERT INTO bookings (bookings.id_user, bookings.id_service, bookings.id_location, bookings.id_staff, bookings.booking_date) 
+            VALUES (?, ?, ?, ?, ?)`,
+          [
+            userId,
+            serviceId,
+            locationId,
+            chosen.id,
+            startBooking.format("YYYY-MM-DD HH:mm:ss"),
+          ]
+        );
+        if (newBooking) {
+          console.log({ newBooking });
+          res.status(201).json({ message: "Booking was successful" });
+        }
+      } else {
+        res.status(500).json({
+          message: "All staff members are booked for the selected time",
+        });
       }
     }
   } else {
