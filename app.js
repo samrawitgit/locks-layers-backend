@@ -11,6 +11,7 @@ const salonRoutes = require("./routes/salon");
 
 const app = express();
 
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json()); // application/json
 
 app.use((req, res, next) => {
@@ -21,9 +22,12 @@ app.use((req, res, next) => {
   );
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type",
-    "Authorization"
+    "Accept, Authorization, Content-Type, X-Requested-With, Range"
   ); // allows to set headers
+  if (req.method === "OPTIONS") {
+    res.header("Access-Control-Allow-Methods", "PUT, POST, PATCH, DELETE, GET");
+    return res.status(200).json({});
+  }
   next();
 });
 

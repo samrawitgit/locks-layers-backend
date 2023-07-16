@@ -8,7 +8,7 @@ const { getRandomStaffMember } = require("./staff");
 
 exports.getBookingsByLoc = (req, res, next) => {
   const locationId = req.params.locationId;
-  let bookingData;
+  let bookingDataByLoc;
   sqlDb
     .execute(
       `SELECT b.id_user AS user, b.booking_date, s.service_type, s.duration, st.name AS staff_name, st.surname AS staff_surname, l.city, l.tot_work_stations FROM bookings AS b
@@ -19,7 +19,7 @@ exports.getBookingsByLoc = (req, res, next) => {
       [locationId]
     )
     .then((result) => {
-      bookingData = result[0];
+      bookingDataByLoc = result[0];
       const userIds = result[0].map((res) => new ObjectId(res.user));
       getDb()
         .db()
@@ -34,7 +34,7 @@ exports.getBookingsByLoc = (req, res, next) => {
           //   userData: bookingData[0].user,
           // });
           data.forEach((userData) => {
-            bookingData
+            bookingDataByLoc
               .filter((b) => b.user === userData._id.toString())
               .forEach((currB) => {
                 if (currB.user === userData._id.toString()) {
@@ -48,7 +48,7 @@ exports.getBookingsByLoc = (req, res, next) => {
                 return currB;
               });
           });
-          res.status(200).json({ data: { bookingData } });
+          res.status(200).json({ data: { bookingDataByLoc } });
         });
     })
     .catch((err) => {
@@ -79,8 +79,9 @@ exports.getBookingsByUser = (req, res, next) => {
 };
 
 exports.getBookingsGroupedByMonth = (req, res, next) => {
-  const locationId = req.params.locationId;
+  const locationId = req.query.locationId;
   let bookingData;
+
   sqlDb
     .execute(
       `SELECT DATE_FORMAT(booking_date, '%m-%Y') AS month_group, 
@@ -99,10 +100,12 @@ exports.getBookingsGroupedByMonth = (req, res, next) => {
         .collection("users")
         .find({ _id: { $in: userIds } })
         .forEach((user) => {
+          console.log({ res: result[0] });
           bookingData = result[0].reduce((acc, curr, i) => {
             const { month_group, ...data } = curr;
             console.log({ acc, curr, user });
             acc[month_group] = acc[month_group] || [];
+            console.log({ gr: acc[month_group] });
             curr.user = {
               id: user._id,
               userName: user.userName,
@@ -121,6 +124,18 @@ exports.getBookingsGroupedByMonth = (req, res, next) => {
       console.log(err);
       res.status(500).json({ message: "Failed to fetch bookings." });
     });
+};
+
+exports.getAllServices = async (req, res, next) => {
+  const serviceRes = await sqlDb.execute("SELECT * FROM services;");
+  if (serviceRes) {
+    console.log({ serviceRes });
+    res.status(200).json({ data: { services: serviceRes[0] } });
+  } else {
+    res
+      .status(500)
+      .json({ error: true, message: "Failed to retrieve services data" });
+  }
 };
 
 exports.getServiceByType = (type) =>

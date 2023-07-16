@@ -3,6 +3,7 @@ const router = express.Router();
 
 const locationController = require("../controllers/location");
 const staffController = require("../controllers/staff");
+const bookingsController = require("../controllers/bookings");
 
 /* STAFF */
 router.get(
@@ -17,15 +18,19 @@ router.get(
 router.get("/staff-count/:locationId", staffController.getCurrentStaffCount);
 
 /* LOCATIONS */
-router.get("/locations", locationController.getLocations);
+router.get("/locations", locationController.getLocationsData);
 
 router.get("/locations/:locationId", locationController.getLocation);
 
-router.get("/business_hours/:locationId", locationController.getBusinessHours);
+router.get(
+  "/business_hours/:locationId",
+  locationController.getBusinessHoursByLoc
+);
 
 router.post("/close-location", locationController.closeLocation);
 
 router.post("/time-off", staffController.addTimeOff);
+router.get("/services", bookingsController.getAllServices);
 
 // router.post('add-product', ...) // admin/add-product => POST
 
