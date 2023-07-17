@@ -99,9 +99,10 @@ exports.addTimeOff = async (req, res, next) => {
   console.log({ start: startDateCheck[0], endDateCheck: endDateCheck[0] });
 
   if (startDateCheck[0].length || endDateCheck[0].length) {
-    res
-      .status(403)
-      .json({ message: "Staff is already off in the selected date & time" });
+    res.status(403).json({
+      error: true,
+      message: "Staff is already off in the selected date & time",
+    });
   } else {
     const insertRes = await sqlDb.execute(
       `
@@ -111,12 +112,15 @@ exports.addTimeOff = async (req, res, next) => {
       [staffId, startDate, endDate]
     );
     if (insertRes) {
-      console.log({ insertRes, res: insertRes[0] });
-      res
-        .status(201)
-        .json({ message: "Staff timetable was successfully updated" });
+      // console.log({ insertRes, res: insertRes[0] });
+      res.status(201).json({
+        error: false,
+        message: "Staff timetable was successfully updated",
+      });
     } else {
-      res.status(500).json({ message: "Staff timetable could not be updated" });
+      res
+        .status(500)
+        .json({ error: true, message: "Staff timetable could not be updated" });
     }
   }
 
