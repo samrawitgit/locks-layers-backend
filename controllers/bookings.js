@@ -3,7 +3,6 @@ const { ObjectId } = require("mongodb");
 
 const sqlDb = require("../utils/database").sqlDb;
 const getDb = require("../utils/database").getDb;
-const { getLocationIdByCity } = require("./location");
 const { getRandomStaffMember } = require("./staff");
 
 exports.getBookingsByLoc = (req, res, next) => {
@@ -27,12 +26,7 @@ exports.getBookingsByLoc = (req, res, next) => {
         .find({ _id: { $in: userIds } })
         .toArray()
         .then((data) => {
-          console.log({ data });
-          // console.log({
-          //   usersData,
-          //   bookingData,
-          //   userData: bookingData[0].user,
-          // });
+          // console.log({ data });
           data.forEach((userData) => {
             bookingDataByLoc
               .filter((b) => b.user === userData._id.toString())
@@ -52,8 +46,10 @@ exports.getBookingsByLoc = (req, res, next) => {
         });
     })
     .catch((err) => {
-      console.log(err);
-      res.status(500).json({ message: "Failed to fetch bookings." });
+      // console.log(err);
+      res
+        .status(500)
+        .json({ error: true, message: "Failed to fetch bookings." });
     });
 };
 
@@ -69,11 +65,11 @@ exports.getBookingsByUser = (req, res, next) => {
       [userId]
     )
     .then((result) => {
-      console.log({ result });
+      // console.log({ result });
       res.status(200).json({ error: false, bookings: result[0] });
     })
     .catch((err) => {
-      console.log(err);
+      // console.log(err);
       res
         .status(500)
         .json({ error: true, message: "Failed to fetch user bookings." });
@@ -135,7 +131,7 @@ exports.getBookingsGroupedByMonth = async (req, res, next) => {
 exports.getAllServices = async (req, res, next) => {
   const serviceRes = await sqlDb.execute("SELECT * FROM services;");
   if (serviceRes) {
-    console.log({ serviceRes });
+    // console.log({ serviceRes });
     res.status(200).json({ error: false, services: serviceRes[0] });
   } else {
     res
@@ -157,7 +153,7 @@ exports.addBooking = async (req, res, next) => {
   const startBooking = dayjs(req.body.date);
 
   const serviceRes = await this.getServiceById(serviceId);
-  console.log({ serviceRes, serv: serviceRes[0] });
+  // console.log({ serviceRes, serv: serviceRes[0] });
   if (serviceRes) {
     const duration = serviceRes[0][0].duration;
 
@@ -179,7 +175,7 @@ exports.addBooking = async (req, res, next) => {
         ]
       );
       if (newBooking) {
-        console.log({ newBooking });
+        // console.log({ newBooking });
         res
           .status(201)
           .json({ error: false, message: "Booking was successful" });

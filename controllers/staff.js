@@ -14,7 +14,7 @@ exports.getStaff = (req, res, next) => {
       locationId,
     ])
     .then((result) => {
-      console.log({ res: result });
+      // console.log({ res: result });
       const days = result[0].map((item, id) => {
         // console.log(item, id);
         return item.day_of_week;
@@ -25,7 +25,7 @@ exports.getStaff = (req, res, next) => {
         .json({ error: false, staff: result[0], count: result[0].length });
     })
     .catch((err) => {
-      console.log(err);
+      // console.log(err);
       res
         .status(500)
         .json({ error: true, message: "Failed to fetch staff data." });
@@ -45,7 +45,7 @@ exports.getCurrentStaffCount = (req, res, next) => {
         .json({ error: false, count: Object.values(result[0][0])[0] });
     })
     .catch((err) => {
-      console.log(err);
+      // console.log(err);
       res
         .status(500)
         .json({ error: true, message: "Failed to fetch staff count." });
@@ -120,7 +120,7 @@ exports.addTimeOff = async (req, res, next) => {
   const startDateCheck = await this.isStaffOff(startDate, staffId);
   const endDateCheck = await this.isStaffOff(endDate, staffId);
 
-  console.log({ start: startDateCheck[0], endDateCheck: endDateCheck[0] });
+  // console.log({ start: startDateCheck[0], endDateCheck: endDateCheck[0] });
 
   if (startDateCheck[0].length || endDateCheck[0].length) {
     res.status(403).json({

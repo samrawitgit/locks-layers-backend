@@ -33,7 +33,7 @@ exports.getBusinessHoursByLoc = (req, res, next) => {
       res.status(200).json({ error: false, business_hours: result_ });
     })
     .catch((err) => {
-      console.log(err);
+      // console.log(err);
       res
         .status(500)
         .json({ error: true, message: "Failed to fetch location." });
@@ -61,7 +61,7 @@ exports.getBusinessHours = () => {
       return result__;
     })
     .catch((err) => {
-      console.log(err);
+      // console.log(err);
       return { error: true, message: "Could not get business hours" };
     });
 };
@@ -102,7 +102,7 @@ exports.getLocationsData = (req, res, next) => {
       res.status(200).json({ error: false, locations });
     })
     .catch((err) => {
-      console.log(err);
+      // console.log(err);
       res
         .status(500)
         .json({ error: true, message: "Failed to fetch locations." });
@@ -114,11 +114,11 @@ exports.getLocation = (req, res, next) => {
   sqlDb
     .execute("SELECT * FROM locations WHERE id = ?;", [locationId])
     .then((result) => {
-      console.log({ res: result[0][0] });
+      // console.log({ res: result[0][0] });
       res.status(200).json({ error: false, location: result[0][0] });
     })
     .catch((err) => {
-      console.log(err);
+      // console.log(err);
       res
         .status(500)
         .json({ error: true, message: "Failed to fetch location." });
@@ -175,6 +175,7 @@ exports.closeLocation = async (req, res, next) => {
   const locationId = req.body.locationId;
   const startDate = dayjs(req.body.start_date).format("YYYY-MM-DD"); // YYYY-MM-DD
   const endDate = dayjs(req.body.end_date).format("YYYY-MM-DD"); // YYYY-MM-DD
+  const reason = req.body.reason;
 
   const datesCheck = await this.isLocationClosed(
     startDate,
@@ -185,10 +186,10 @@ exports.closeLocation = async (req, res, next) => {
   if (!datesCheck.error) {
     const insertRes = await sqlDb.execute(
       `
-      INSERT INTO closing_dates (closing_dates.id_location, closing_dates.start_date, closing_dates.end_date)
-        VALUES (?, ?, ?);
+      INSERT INTO closing_dates (closing_dates.id_location, closing_dates.start_date, closing_dates.end_date, closing_dates.details)
+        VALUES (?, ?, ?, ?);
     `,
-      [locationId, startDate, endDate]
+      [locationId, startDate, endDate, reason]
     );
     if (insertRes) {
       res.status(201).json({
