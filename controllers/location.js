@@ -21,9 +21,10 @@ exports.getBusinessHoursByLoc = (req, res, next) => {
     )
     .then((result) => {
       const result_ = result[0].map((day) => {
-        const day_week = DAY_OF_WEEK[day.id_day_of_week];
+        const week_day_label = DAY_OF_WEEK[day.id_day_of_week];
         return {
-          day_week,
+          week_day_label,
+          week_day_id: day.id_day_of_week,
           opening_time: day.opening_time,
           closing_time: day.closing_time,
           closed: !!day.closed,
@@ -45,9 +46,14 @@ exports.getBusinessHours = () => {
     .then((result) => {
       const result__ = result[0].reduce((acc, curr) => {
         const { id_location, id_day_of_week, ...data } = curr;
-        const day_week = DAY_OF_WEEK[id_day_of_week];
+        const week_day_label = DAY_OF_WEEK[id_day_of_week];
         acc[id_location - 1] = acc[id_location - 1] || [];
-        acc[id_location - 1].push({ ...data, day_week, closed: !!data.closed });
+        acc[id_location - 1].push({
+          ...data,
+          week_day_label,
+          week_day_id: id_day_of_week,
+          closed: !!data.closed,
+        });
         return acc;
       }, []);
       return result__;
@@ -92,11 +98,13 @@ exports.getLocationsData = (req, res, next) => {
         return acc;
       }, []);
 
-      res.status(200).json({ data: { locations } });
+      res.status(200).json({ error: false, locations });
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({ message: "Failed to fetch locations." });
+      res
+        .status(500)
+        .json({ error: true, message: "Failed to fetch locations." });
     });
 };
 

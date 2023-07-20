@@ -46,7 +46,7 @@ exports.getCurrentStaffCount = (req, res, next) => {
     });
 };
 
-exports.getRandomStaffMember = (start, duration, locationId) => {
+exports.getRandomStaffMember = async (start, duration, locationId) => {
   const durationObj = {
     h: duration.slice(0, 2),
     m: duration.slice(3, 5),
@@ -57,7 +57,7 @@ exports.getRandomStaffMember = (start, duration, locationId) => {
     .add(durationObj.m, "minute")
     .format("YYYY-MM-DD HH:mm:ss");
 
-  return sqlDb.execute(
+  const allStaffRes = await sqlDb.execute(
     `
     SELECT s.*,  l.city, l.tot_work_stations FROM staff AS s
       LEFT JOIN (SELECT * FROM alt_staff_hours AS alt
@@ -76,6 +76,24 @@ exports.getRandomStaffMember = (start, duration, locationId) => {
       locationId,
     ]
   );
+  if (allStaffRes) {
+    const availableStaff = allStaffRes[0];
+    if (availableStaff.length > 0) {
+      const chosen =
+        availableStaff[Math.floor(Math.random() * availableStaff.length)];
+      return chosen;
+    } else {
+      return {
+        error: true,
+        message: "All staff members are booked for the selected time",
+      };
+    }
+  } else {
+    return {
+      error: true,
+      message: "No available staff for selected time slot",
+    };
+  }
 };
 
 exports.isStaffOff = (date, staffId) => {

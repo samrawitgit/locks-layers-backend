@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { ObjectId } = require("mongodb");
 const getDb = require("../utils/database").getDb;
 
 const User = require("../models/user").User;
@@ -191,7 +192,11 @@ exports.userLogin = (req, res, next) => {
       res.status(200).json({
         message: "Authentication succeeded.",
         token: token,
-        userId: loadedUser._id.toString(),
+        user: {
+          id: loadedUser._id.toString(),
+          email: loadedUser.email,
+          name: loadedUser.name,
+        },
       });
     })
     .catch((err) => {
@@ -204,6 +209,22 @@ exports.userLogin = (req, res, next) => {
         message: "Authentication failed, invalid username or password.",
       });
     });
+};
+
+exports.getUserData = async (req, res, next) => {
+  const userId = req.params.userId;
+  console.log({ userId });
+  const userRes = await getDb()
+    .db()
+    .collection("users")
+    .findOne({ _id: new ObjectId(userId) });
+  if (userRes) {
+    const { password, ...userData } = userRes;
+    console.log({ userData });
+    res.status(200).json({ error: false, userData: userData });
+  } else {
+    res.status(500).json({ error: true, message: "User does not exist" });
+  }
 };
 
 // exports.login = (req, res, next) => {

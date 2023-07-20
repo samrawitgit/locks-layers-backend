@@ -37,6 +37,8 @@ router.post("/admin-signup", authController.adminRegistration);
 router.post("/login", authController.userLogin);
 router.post("/signup", authController.userRegistration);
 
+router.get("/user/:userId", authController.getUserData);
+
 // router.post('/login', authController.login);
 
 // router.get('/status', isAuth, authController.getUserStatus);
