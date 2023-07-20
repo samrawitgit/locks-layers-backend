@@ -30,11 +30,13 @@ exports.getBusinessHoursByLoc = (req, res, next) => {
           closed: !!day.closed,
         };
       });
-      res.status(200).json({ data: { business_hours: result_ } });
+      res.status(200).json({ error: false, business_hours: result_ });
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({ message: "Failed to fetch location." });
+      res
+        .status(500)
+        .json({ error: true, message: "Failed to fetch location." });
     });
 };
 
@@ -57,11 +59,10 @@ exports.getBusinessHours = () => {
         return acc;
       }, []);
       return result__;
-      // res.status(200).json({ data: { business_hours: result_ } });
     })
     .catch((err) => {
       console.log(err);
-      return { error: true };
+      return { error: true, message: "Could not get business hours" };
     });
 };
 
@@ -114,11 +115,13 @@ exports.getLocation = (req, res, next) => {
     .execute("SELECT * FROM locations WHERE id = ?;", [locationId])
     .then((result) => {
       console.log({ res: result[0][0] });
-      res.status(200).json({ data: { location: result[0][0] } });
+      res.status(200).json({ error: false, location: result[0][0] });
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({ message: "Failed to fetch location." });
+      res
+        .status(500)
+        .json({ error: true, message: "Failed to fetch location." });
     });
 };
 
@@ -188,11 +191,14 @@ exports.closeLocation = async (req, res, next) => {
       [locationId, startDate, endDate]
     );
     if (insertRes) {
-      res
-        .status(201)
-        .json({ message: "Salon timetable was successfully updated" });
+      res.status(201).json({
+        error: false,
+        message: "Salon timetable was successfully updated",
+      });
     } else {
-      res.status(500).json({ message: "Timetable could not be updated" });
+      res
+        .status(500)
+        .json({ error: true, message: "Timetable could not be updated" });
     }
   } else {
     res.status(403).json({

@@ -22,11 +22,13 @@ exports.getStaff = (req, res, next) => {
       // console.log(result[0], days);
       res
         .status(200)
-        .json({ data: { staff: result[0], count: result[0].length } });
+        .json({ error: false, staff: result[0], count: result[0].length });
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({ message: "Failed to fetch staff data." });
+      res
+        .status(500)
+        .json({ error: true, message: "Failed to fetch staff data." });
     });
 };
 
@@ -38,11 +40,15 @@ exports.getCurrentStaffCount = (req, res, next) => {
       [locationId]
     )
     .then((result) => {
-      res.status(200).json({ data: { count: Object.values(result[0][0])[0] } });
+      res
+        .status(200)
+        .json({ error: false, count: Object.values(result[0][0])[0] });
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({ message: "Failed to fetch staff count." });
+      res
+        .status(500)
+        .json({ error: true, message: "Failed to fetch staff count." });
     });
 };
 

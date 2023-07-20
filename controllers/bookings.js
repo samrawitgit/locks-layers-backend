@@ -48,7 +48,7 @@ exports.getBookingsByLoc = (req, res, next) => {
                 return currB;
               });
           });
-          res.status(200).json({ data: { bookingDataByLoc } });
+          res.status(200).json({ error: false, bookingDataByLoc });
         });
     })
     .catch((err) => {
@@ -118,7 +118,7 @@ exports.getBookingsGroupedByMonth = async (req, res, next) => {
         }, {});
         return user;
       });
-      res.status(200).json({ error: false, data: { bookingData } });
+      res.status(200).json({ error: false, bookingData });
     } else {
       res
         .status(500)
@@ -130,56 +130,6 @@ exports.getBookingsGroupedByMonth = async (req, res, next) => {
       message: "No bookings available for this location.",
     });
   }
-};
-
-exports.getBookingsGroupedByMonth_ = (req, res, next) => {
-  const locationId = req.query.locationId;
-  let bookingData;
-
-  sqlDb
-    .execute(
-      `SELECT DATE_FORMAT(booking_date, '%m-%Y') AS month_group, 
-        b.id_user AS user, b.booking_date, s.service_type, s.duration, st.name AS staff_name, st.surname AS staff_surname, l.city FROM bookings AS b
-        INNER JOIN services AS s ON b.id_service = s.id
-        INNER JOIN staff AS st ON st.id = b.id_staff
-        INNER JOIN locations AS l ON l.id = b.id_location
-        WHERE b.id_location = ?
-        GROUP BY MONTH(booking_date), YEAR(booking_date), b.id`,
-      [locationId]
-    )
-    .then((result) => {
-      const userIds = result[0].map((res) => new ObjectId(res.user));
-      getDb()
-        .db()
-        .collection("users")
-        .find({ _id: { $in: userIds } })
-        .forEach((user) => {
-          console.log({ res: result[0] });
-          bookingData = result[0].reduce((acc, curr, i) => {
-            const { month_group, ...data } = curr;
-            console.log({ acc, curr, user });
-            acc[month_group] = acc[month_group] || [];
-            console.log({ gr: acc[month_group] });
-            curr.user = {
-              id: user._id,
-              userName: user.userName,
-              name: user.name,
-              surname: user.surname,
-            };
-            acc[month_group].push(data);
-            return acc;
-          }, {});
-        })
-        .then((data) => {
-          res.status(200).json({ error: false, data: { bookingData } });
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      res
-        .status(500)
-        .json({ error: true, message: "Failed to fetch bookings." });
-    });
 };
 
 exports.getAllServices = async (req, res, next) => {
