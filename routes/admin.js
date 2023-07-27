@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const isAuth = require("../utils/is-auth");
+
 const locationController = require("../controllers/location");
 const staffController = require("../controllers/staff");
 const bookingsController = require("../controllers/bookings");
@@ -18,7 +20,7 @@ router.get(
 router.get("/staff-count/:locationId", staffController.getCurrentStaffCount);
 
 /* LOCATIONS */
-router.get("/locations", locationController.getLocationsData);
+router.get("/locations", isAuth, locationController.getLocationsData);
 
 router.get("/locations/:locationId", locationController.getLocation);
 
@@ -27,10 +29,10 @@ router.get(
   locationController.getBusinessHoursByLoc
 );
 
-router.post("/close-location", locationController.closeLocation);
+router.post("/close-location", isAuth, locationController.closeLocation);
 
-router.post("/time-off", staffController.addTimeOff);
-router.get("/services", bookingsController.getAllServices);
+router.post("/time-off", isAuth, staffController.addTimeOff);
+router.get("/services", isAuth, bookingsController.getAllServices);
 
 // router.post('add-product', ...) // admin/add-product => POST
 

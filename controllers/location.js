@@ -175,7 +175,9 @@ exports.closeLocation = async (req, res, next) => {
   const locationId = req.body.locationId;
   const startDate = dayjs(req.body.start_date).format("YYYY-MM-DD"); // YYYY-MM-DD
   const endDate = dayjs(req.body.end_date).format("YYYY-MM-DD"); // YYYY-MM-DD
-  const reason = req.body.reason;
+  const reason = req.body.reason || "";
+
+  // console.log({ locationId, startDate, endDate, reason });
 
   const datesCheck = await this.isLocationClosed(
     startDate,

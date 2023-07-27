@@ -77,6 +77,7 @@ exports.adminRegistration = (req, res, next) => {
 exports.adminLogin = (req, res, next) => {
   const userName = req.body.userName;
   const password = req.body.password;
+  // console.log({ req });
   let loadedUser;
   getDb()
     .db()
@@ -97,7 +98,8 @@ exports.adminLogin = (req, res, next) => {
       if (!isEqual) {
         throw Error();
       }
-      const token = createToken();
+      const token = createToken({ userId: loadedUser._id.toString() });
+      // console.log({ [`${userName}`]: loadedUser._id.toString(), token });
       res.status(200).json({
         message: "Authentication succeeded.",
         token: token,
