@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 
 app.use("/admin", adminRoutes);
 app.use("/auth", authRoutes);
+app.use("/salon", salonRoutes);
 app.use("/", bookingsRoutes);
 
 // Route to handle improper paths (catch all route)

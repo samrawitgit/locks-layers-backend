@@ -128,6 +128,9 @@ exports.getLocation = (req, res, next) => {
 exports.getLocationIdByCity = (city) =>
   sqlDb.execute(`SELECT * FROM locations WHERE city=?`, [city]);
 
+exports.getLocationCityById = (id) =>
+  sqlDb.execute(`SELECT * FROM locations WHERE id=?`, [id]);
+
 exports.isLocationClosed = async (start, end, locationId) => {
   const isClosed = await sqlDb.execute(
     `

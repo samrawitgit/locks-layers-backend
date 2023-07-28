@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { body } = require("express-validator");
 
 const isAuth = require("../utils/is-auth");
 
@@ -29,9 +30,28 @@ router.get(
   locationController.getBusinessHoursByLoc
 );
 
-router.post("/close-location", isAuth, locationController.closeLocation);
+router.post(
+  "/close-location",
+  isAuth,
+  [
+    body("locationId").escape(),
+    body("start_date").escape(),
+    body("end_date").escape(),
+    body("reason").escape(),
+  ],
+  locationController.closeLocation
+);
 
-router.post("/time-off", isAuth, staffController.addTimeOff);
+router.post(
+  "/time-off",
+  isAuth,
+  [
+    body("staff_id").escape(),
+    body("start_date").escape(),
+    body("end_date").escape(),
+  ],
+  staffController.addTimeOff
+);
 router.get("/services", isAuth, bookingsController.getAllServices);
 
 // router.post('add-product', ...) // admin/add-product => POST

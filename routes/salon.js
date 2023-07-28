@@ -1,8 +1,8 @@
-const express = require('express');
-
+const express = require("express");
 const router = express.Router();
 
-// router.get('add-product', ...) // admin/add-product => GET
-// router.post('add-product', ...) // admin/add-product => POST
+const locationController = require("../controllers/location");
+
+router.get("/locations", locationController.getLocationsData);
 
 module.exports = router;

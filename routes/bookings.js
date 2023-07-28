@@ -1,5 +1,5 @@
 const express = require("express");
-const { check, body } = require("express-validator");
+const { body } = require("express-validator");
 
 const isAuth = require("../utils/is-auth");
 
@@ -15,6 +15,15 @@ router.get(
 router.get("/bookings/:locationId", bookingsController.getBookingsByLoc);
 router.get("/user-bookings/:userId", bookingsController.getBookingsByUser);
 
-router.post("/new-booking", bookingsController.addBooking);
+router.post(
+  "/new-booking",
+  [
+    body("userId").escape(),
+    body("serviceId").escape(),
+    body("locationId").escape(),
+    body("date").escape(),
+  ],
+  bookingsController.addBooking
+);
 
 module.exports = router;
