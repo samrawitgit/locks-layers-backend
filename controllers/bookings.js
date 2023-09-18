@@ -19,6 +19,7 @@ exports.getBookingsByLoc = (req, res, next) => {
     )
     .then((result) => {
       bookingDataByLoc = result[0];
+      console.log("SQL", { bookingDataByLoc });
       const userIds = result[0].map((res) => new ObjectId(res.user));
       getDb()
         .db()
@@ -26,7 +27,7 @@ exports.getBookingsByLoc = (req, res, next) => {
         .find({ _id: { $in: userIds } })
         .toArray()
         .then((data) => {
-          // console.log({ data });
+          console.log("MDB", { data });
           data.forEach((userData) => {
             bookingDataByLoc
               .filter((b) => b.user === userData._id.toString())
@@ -46,7 +47,7 @@ exports.getBookingsByLoc = (req, res, next) => {
         });
     })
     .catch((err) => {
-      // console.log(err);
+      console.log(err);
       res
         .status(500)
         .json({ error: true, message: "Failed to fetch bookings." });
