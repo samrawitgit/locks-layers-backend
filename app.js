@@ -63,7 +63,7 @@ initDb((err, db) => {
     console.log(err);
   } else {
     console.log("connected");
-    app.listen(8080); //, "192.168.1.121"
+    app.listen(process.env.PORT || 8080); //, "192.168.1.121"
   }
 });
 
