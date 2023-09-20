@@ -49,19 +49,6 @@ app.use((error, req, res, next) => {
   res.status(status).json({ message: message, data: data });
 });
 
-sqlDb
-  .execute(
-    `SELECT b.id_user AS user, b.booking_date, s.service_type, s.duration, st.name AS staff_name, st.surname AS staff_surname, l.city, l.tot_work_stations FROM bookings AS b
-INNER JOIN services AS s ON b.id_service = s.id
-INNER JOIN staff AS st ON st.id = b.id_staff
-INNER JOIN locations AS l ON l.id = b.id_location
-WHERE b.id_location = 1;`
-  )
-  .then((result) => {
-    console.log("app.js SQL", result);
-  })
-  .catch((err) => console.log("app.js SQL", err));
-
 // app.listen(8080); //, "192.168.1.121"
 
 initDb((err, db) => {
@@ -70,6 +57,18 @@ initDb((err, db) => {
   } else {
     console.log("connected");
     app.listen(process.env.PORT || 8080); //, "192.168.1.121"
+    sqlDb
+      .execute(
+        `SELECT b.id_user AS user, b.booking_date, s.service_type, s.duration, st.name AS staff_name, st.surname AS staff_surname, l.city, l.tot_work_stations FROM bookings AS b
+    INNER JOIN services AS s ON b.id_service = s.id
+    INNER JOIN staff AS st ON st.id = b.id_staff
+    INNER JOIN locations AS l ON l.id = b.id_location
+    WHERE b.id_location = 1;`
+      )
+      .then((result) => {
+        console.log("app.js SQL", result);
+      })
+      .catch((err) => console.log("app.js SQL", err));
   }
 });
 
