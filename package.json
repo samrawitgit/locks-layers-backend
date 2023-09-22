@@ -2,14 +2,14 @@
   "name": "locks-layers-backend",
   "version": "1.0.0",
   "description": "Node.js server for Locks&Layers applications",
-  "main": "app.js",
+  "main": "index.js",
   "engines": {
     "node": "18.18.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "start-nodemon": "nodemon app.js"
+    "start": "node index.js",
+    "start-nodemon": "nodemon index.js"
   },
   "repository": {
     "type": "git",
